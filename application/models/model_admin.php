@@ -44,12 +44,16 @@ class Model_Admin
 
     /**
      * Получаем по id фильма все данные по фильму
+     *
      * @param $id_film
      * @return bool
      */
     public function getFilm($id_film)
     {
-        $sql = "SELECT * FROM `films` WHERE `a_id` = :id_film LIMIT 1";
+        $sql = "SELECT `a_id`,`name_film`,`poster`,`description`,`date_start`,`date_end`,`date_added`,`date_modication` , GROUP_CONCAT(s2t.`id_seances`) as `all_seances`
+                FROM `films` f 
+                    LEFT JOIN `seances_to_film` s2t ON s2t.`id_film` = f.`a_id`
+                WHERE `a_id` = :id_film LIMIT 1";
 
         try {
             $queryes = $this->pdo->prepare($sql);
@@ -64,9 +68,32 @@ class Model_Admin
         return $data;
     }
 
+    /**
+     * Получаем все возможные сеансы
+     *
+     * @return bool
+     */
+    public function getAllSeance()
+    {
+        $sql = "SELECT `id_seance`, `time` FROM `seances` ORDER BY `a_order`";
+
+        try {
+            $queryes = $this->pdo->prepare($sql);
+            $queryes->execute();
+            $data = $queryes->fetchAll(PDO::FETCH_KEY_PAIR);
+
+        } catch (PDOException $e) {	$data = false;
+            echo 'Подключение не удалось: ' . $e->getMessage();
+            return false;
+        }
+
+        return $data;
+    }
+
 
     /**
-     * Модель сохраняет в БД фильм
+     * Сохраняем изменения параметров фильма
+     *
      * @param $data
      * @return bool|null
      */
@@ -124,6 +151,54 @@ class Model_Admin
     }
 
     /**
+     * Сохраняем сеансы для заданного фильма. Предварительно удаляв для этого фильма все записи.
+     *
+     * @param $id_film
+     * @param $film_seances
+     * @return array|bool|null
+     */
+    public function saveSeances($id_film, $film_seances)
+    {
+        if (!empty($id_film) AND !empty($film_seances)) {
+            //  удаляем сеансы для этого фильма
+            $sql = "DELETE FROM `seances_to_film` WHERE `id_film` = :id_film";
+
+            try {
+                $queryes = $this->pdo->prepare($sql);
+                $result1 = $queryes->execute([':id_film' => $id_film]);
+            } catch (PDOException $e) {
+                $result1 = null;
+                echo 'Подключение не удалось: ' . $e->getMessage();
+                return false;
+            }
+
+            //  записываем сеансы
+            foreach ($film_seances as $seance) {
+                $sql = "INSERT INTO `seances_to_film` (`id_film`, `id_seances`) VALUES (:id_film, :id_seances)";
+
+                try {
+                    $queryes = $this->pdo->prepare($sql);
+                    $result2 = $queryes->execute([
+                            ':id_film' => $id_film,
+                            ':id_seances' => $seance,
+                        ]);
+
+                    if ($result2) $results[] = $this->pdo->lastInsertId();
+
+                } catch (PDOException $e) {
+                    $results = null;
+                    echo 'Подключение не удалось: ' . $e->getMessage();
+                    return false;
+                }
+            }
+
+            return $results;
+        } else return false;
+    }
+
+
+
+    /**
      * Удаляем список фильмов
      *
      * @param $listFilms
@@ -145,7 +220,6 @@ class Model_Admin
 
         return $data;
     }
-
 
     /**
      * Получаем список купленных билетов с привязкой к сеансам, также данные по номерам мест

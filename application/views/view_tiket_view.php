@@ -43,7 +43,7 @@
 
 <script>
     function create_result()
-    {
+    {    //  получаем список купленных билетов и добавляем в блок tikets
         $.ajax({
             url: '/admin/seanses',
             type: 'post',
@@ -90,10 +90,10 @@
             }
         });
 
-        create_result();    //  получаем список купленных билетов и добавляем в блок tikets
+        create_result();
     });
 
     $('#select_date').on('change', function(){
-        create_result();    //  получаем список купленных билетов и добавляем в блок tikets
+        create_result();
     });
 </script>

@@ -59,7 +59,9 @@ class Controller_Admin extends Controller
         $data['edit'] = 1;
 
         if (isset($_GET['id'])) {
-            $data['id_film'] = $_GET['id']; //  переходим к созданию нового фильма
+            $data['id_film'] = $_GET['id'];
+        } elseif ($_POST['a_id']) {
+            $data['id_film'] = $_POST['a_id'];
         } else { $data['id_film'] = 1; }
 
         $film = $this->model->getFilm($data['id_film']);
@@ -67,6 +69,12 @@ class Controller_Admin extends Controller
         $data['film'] = $film[0];
 
         $data['action'] = "/admin/editfilm";
+
+        $data['seances'] = $this->model->getAllSeance();   //  получаем все сеансы существующие
+
+        $data['film_seances'] = explode(",", $data['film']['all_seances']);  ;   //  получаем сеансы этого фильма
+
+        $data['poster'] = $data['film']['poster'];
 
         if(isset($_FILES['poster_file'])) {
             $check = $this->can_upload($_FILES['poster_file']);
@@ -76,11 +84,15 @@ class Controller_Admin extends Controller
             } else {
                 $data['message'] = "Error load file";
             }
-        } else {  $data['poster'] = '/images/poster/unnamed.png'; }
+        }
 
         //  Сохраняем данные о фильме
         if (isset($_POST['save']) AND !empty($_POST['a_id'])) {
             $this->model->editFilm($data);
+            if (isset($_POST['film_seances']) AND !empty($_POST['film_seances'])) { //  сохраняем сеансы
+                $this->model->saveSeances($data['id_film'], $_POST['film_seances']);
+            }
+
             $this->redirect ( 'admin/films' );
         }
 

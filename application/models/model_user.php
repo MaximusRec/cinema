@@ -34,8 +34,6 @@ class Model_User extends Model
 				return $user;
 		} 
 		else return NULL;
-		
 	}
-
 
 }

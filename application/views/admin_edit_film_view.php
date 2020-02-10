@@ -23,7 +23,7 @@
     <div class="coverholder">
     <p>Постер<br>
         <?php if (!empty($edit)): ?><img alt="<? echo $film['name_film']; ?>" src="<?= $film['poster']; ?>" ><?php endif; ?>
-        <input type="hidden" name="poster" id="id_poster" size="50" value="<?= $poster ?>" required ><br>
+        <input type="hidden" name="poster" id="id_poster" size="50" value="<?= $poster ?>" ><br>
         <input type="file" name="poster_file"></p>
     </div>
 
@@ -35,6 +35,15 @@
 
     <p>Окончание показа<br>
         <input type="text" name="date_end" id="id_date_end" size="14" pattern="[0-9\-]{10}" value="<?php if (!empty($new)) { echo date('Y-m-d' ,time() + (24*60*60)); } else { echo $film['date_end']; } ?>" placeholder="2000-01-10" required></p>
+
+    <?php if (!empty($film['a_id'])): ?>
+        <p>Выберите время сеансов<br>
+        <?php foreach ($seances as $key => $value): ?>
+            <label><input type="checkbox" name="film_seances[]" value="<?= $key ?>" <?php if (in_array($key, $film_seances) ) echo "checked=checked"; ?> class="checkbox-style" ><?= $value . " " ?></label>
+            <? if (($key % 12) == 0 ) { echo "<br>"; } ?>
+        <?php endforeach; ?>
+        </p>
+    <?php endif; ?>
 
     <?php if (!empty($edit)): ?>
         <p>Опубликовано<br><input type="text" name="date_added" id="id_date_added" size="14" pattern="[0-9\-: ]{20}" value ="<?= $film['date_added']; ?>" placeholder="2000-01-10 10:12:50" readonly></p>
